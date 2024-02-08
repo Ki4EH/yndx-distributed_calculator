@@ -1,9 +1,9 @@
 package logger
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -19,8 +19,10 @@ type FileLogger struct {
 // NewFileLogger Создаем лог файл на текущий день, куда будем записывать
 // всю информацию за день
 func NewFileLogger() (*FileLogger, error) {
-	today := time.DateOnly
-	filePath := fmt.Sprintf("logs/%s.log", today)
+	today := time.Now().Format("2006-01-02")
+	dir, _ := os.Getwd()
+	logDir := filepath.Join(dir, "logs")
+	filePath := filepath.Join(logDir, today+".log")
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
@@ -30,14 +32,16 @@ func NewFileLogger() (*FileLogger, error) {
 
 func (l *FileLogger) Info(message string) {
 	log.SetOutput(l.file)
-	log.Println(time.TimeOnly, " [INFO]: ", message)
+	log.Println("[INFO]: ", message)
 }
 
 func (l *FileLogger) Error(message string) {
 	log.SetOutput(l.file)
-	log.Println(time.TimeOnly, " [ERROR]: ", message)
+	log.Println("[ERROR]: ", message)
 }
 
-func (l *FileLogger) Close() error {
-	return l.file.Close()
+func (l *FileLogger) Close() {
+	log.SetOutput(l.file)
+	log.Println("[INFO]: [SERVER] Server closed")
+	_ = l.file.Close()
 }
